@@ -1,65 +1,36 @@
-#include <imgui.h>
-#include <imgui_node_editor.h>
+#include <QApplication>
+#include <QtNodes/GraphicsView>
+#include <QtNodes/BasicGraphicsScene>
+#include "GraphModel.hpp"
 
-#include "examples/application/include/application.h"
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
 
+    // 1. Create the graph model
+    GraphModel model;
 
-namespace ed = ax::NodeEditor;
+    // 2. Create a scene that visualizes the model
+    auto* scene = new QtNodes::BasicGraphicsScene(model);
 
-struct Example:
-    public Application
-{
-    using Application::Application;
+    // 3. Create a view to display the scene
+    QtNodes::GraphicsView view(scene);
+    view.setWindowTitle("My First Node Graph");
+    view.resize(800, 600);
+    view.show();
 
-    void OnStart() override
-    {
-        ed::Config config;
-        config.SettingsFile = "Simple.json";
-        m_Context = ed::CreateEditor(&config);
-    }
+    view.setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    void OnStop() override
-    {
-        ed::DestroyEditor(m_Context);
-    }
+    QAction* createAction = new QAction("Create Node", &view);
+    QObject::connect(createAction, &QAction::triggered, [&]() {
+        // Get mouse position in scene coordinates
+        QPointF pos = view.mapToScene(view.mapFromGlobal(QCursor::pos()));
 
-    void OnFrame(float deltaTime) override
-    {
-        auto& io = ImGui::GetIO();
+        // Add node to model
+        auto nodeId = model.addNode();
+        model.setNodeData(nodeId, QtNodes::NodeRole::Position, pos);
+    });
 
-        ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
+    view.addAction(createAction);
 
-        ImGui::Separator();
-
-        ed::SetCurrentEditor(m_Context);
-        ed::Begin("My Editor", ImVec2(0.0, 0.0f));
-        int uniqueId = 1;
-        // Start drawing nodes.
-        ed::BeginNode(uniqueId++);
-        ImGui::Text("Node A");
-        ed::BeginPin(uniqueId++, ed::PinKind::Input);
-        ImGui::Text("-> In");
-        ed::EndPin();
-        ImGui::SameLine();
-        ed::BeginPin(uniqueId++, ed::PinKind::Output);
-        ImGui::Text("Out ->");
-        ed::EndPin();
-        ed::EndNode();
-        ed::End();
-        ed::SetCurrentEditor(nullptr);
-
-        //ImGui::ShowMetricsWindow();
-    }
-
-    ed::EditorContext* m_Context = nullptr;
-};
-
-int main(int argc, char** argv)
-{
-    Example exampe("Simple", argc, argv);
-
-    if (exampe.Create())
-        return exampe.Run();
-
-    return 0;
+    return app.exec();
 }

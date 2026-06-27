@@ -1,48 +1,31 @@
-cmake_minimum_required(VERSION 3.15)
-project(nodecoil VERSION 0.1 LANGUAGES CXX)
+cmake_minimum_required(VERSION 4.2)
+project(nodecoil)
+
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-find_package(glfw3 REQUIRED)
-find_package(OpenGL REQUIRED)
 
-# IMGUI
-set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
-add_library(imgui STATIC
-        ${IMGUI_DIR}/imgui.cpp
-        ${IMGUI_DIR}/imgui_draw.cpp
-        ${IMGUI_DIR}/imgui_tables.cpp
-        ${IMGUI_DIR}/imgui_widgets.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-)
-target_include_directories(imgui PUBLIC
-        ${IMGUI_DIR}
-        ${IMGUI_DIR}/backends
-)
-target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
-target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
+find_package(Qt6 COMPONENTS
+        Core
+        Gui
+        Widgets
+        REQUIRED)
 
-# IMGUI-NODE
-set(IMGUI_NODE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-node)
-add_library(imgui-node STATIC
-        ${IMGUI_NODE_DIR}/imgui_node_editor.cpp
-        ${IMGUI_NODE_DIR}/imgui_canvas.cpp
-        ${IMGUI_NODE_DIR}/crude_json.cpp
-        ${IMGUI_NODE_DIR}/examples/application/source/application.cpp
-)
-target_include_directories(imgui-node PUBLIC
-        ${IMGUI_NODE_DIR}
-        ${IMGUI_NODE_DIR}/examples/application/include
+
+add_executable(nodecoil src/main.cpp
+        src/GraphModel.hpp
+        src/GraphModel.cpp
+        src/FileData.cpp)
+target_link_libraries(nodecoil
+        Qt::Core
+        Qt::Gui
+        Qt::Widgets
 )
 
-configure_file(
-        ${IMGUI_NODE_DIR}/examples/application/source/config.h.in
-        ${IMGUI_NODE_DIR}/examples/application/source/config.h
-)
+add_subdirectory(external/node-editor)
+target_link_libraries(nodecoil QtNodes::QtNodes)
 
-target_compile_definitions(imgui-node PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
-target_link_libraries(imgui-node PUBLIC imgui)
 
-# APP
-add_executable(nodecoil src/main.cpp)
-target_link_libraries(nodecoil PRIVATE imgui imgui-node)
+

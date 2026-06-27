@@ -1,3 +1,6 @@
 [submodule "external/imgui-node-editor"]
 	path = external/imgui-node-editor
 	url = https://github.com/sonoro1234/imgui-node-editor
+[submodule "external/node-editor"]
+	path = external/node-editor
+	url = https://github.com/paceholder/nodeeditor
